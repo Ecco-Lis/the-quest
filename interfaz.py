@@ -79,27 +79,66 @@ def dibujar_botones(fuente_texto, pantalla, tamaño_pantalla):
 # Function to display a falling message
 
 
-def mostrar_mensaje(pantalla, fuente_texto, mensaje, y_position):
-    texto_mensaje = fuente_texto.render(mensaje, True, (255, 255, 255))
-    pantalla.blit(
-        texto_mensaje, (tamaño_pantalla[0] // 2 - texto_mensaje.get_width() // 2, y_position))
+def mostrar_mensaje(pantalla, fuente_texto, mensaje, y_position, tamaño_pantalla):
+    fuente_texto_pequeña = pygame.font.Font(None, 24)
+    texto_mensaje = fuente_texto_pequeña.render(mensaje, True, (255, 255, 255))
+    pantalla.blit(texto_mensaje, (tamaño_pantalla[0] // 2 - texto_mensaje.get_width() // 2, y_position))
 
 # Function to animate a falling message
 
 
-def animar_mensaje(pantalla, fuente_texto, mensaje, tamaño_pantalla):
+def animar_mensaje(pantalla, fuente_texto, mensaje, tamaño_pantalla, sonido_tecla_salir, sonido_tecla_aceptar):
     mensaje_y = -fuente_texto.get_height()  # Start off-screen
-    velocidad_mensaje = 1  # Adjust the speed as needed
+    velocidad_mensaje = 0.5  # Adjust the speed as needed
     while mensaje_y < tamaño_pantalla[1] // 2:
+        # Resto del código...
         for evento in pygame.event.get():
             if evento.type == pygame.QUIT:
                 pygame.quit()
                 quit()
         pantalla.fill((0, 0, 0))  # Clear the screen
-        mostrar_mensaje(pantalla, fuente_texto, mensaje, mensaje_y)
+        mostrar_mensaje(pantalla, fuente_texto, mensaje,
+                        mensaje_y, tamaño_pantalla)
         pygame.display.flip()
         mensaje_y += velocidad_mensaje
 
+        if mensaje_y >= tamaño_pantalla[1] // 2:
+            # Esperar 1 segundo antes de mostrar los botones
+            pygame.time.wait(1000)
+
+            boton_continuar = pygame.Rect(
+                tamaño_pantalla[0] // 2 - 100, tamaño_pantalla[1] // 2 + 200, 200, 50)
+            boton_salir = pygame.Rect(
+                tamaño_pantalla[0] // 2 - 100, tamaño_pantalla[1] // 2 + 300, 200, 50)
+
+            texto_continuar = fuente_texto.render("Continuar", True, (0, 0, 0))
+            texto_salir = fuente_texto.render("Salir", True, (0, 0, 0))
+
+            while True:
+                for evento in pygame.event.get():
+                    if evento.type == pygame.QUIT:
+                        pygame.quit()
+                        quit()
+                    elif evento.type == pygame.MOUSEBUTTONDOWN:
+                        if evento.button == 1:
+                            if boton_continuar.collidepoint(evento.pos):
+                                pygame.mixer.Sound.play(sonido_tecla_aceptar)
+                                return  # Salir de la función y continuar con el programa
+                            elif boton_salir.collidepoint(evento.pos):
+                                pygame.mixer.Sound.play(sonido_tecla_salir)
+                                pygame.quit()
+                                quit()
+
+                pantalla.fill((0, 0, 0))  # Clear the screen
+                mostrar_mensaje(pantalla, fuente_texto, mensaje,
+                                tamaño_pantalla[1] // 2, tamaño_pantalla)
+                pygame.draw.rect(pantalla, (255, 255, 255), boton_continuar)
+                pygame.draw.rect(pantalla, (255, 255, 255), boton_salir)
+                pantalla.blit(texto_continuar,
+                              (boton_continuar.x + 50, boton_continuar.y + 15))
+                pantalla.blit(
+                    texto_salir, (boton_salir.x + 75, boton_salir.y + 15))
+                pygame.display.flip()
 # Main function
 
 
@@ -145,7 +184,8 @@ def main():
                         nombre_ingresado = True
                         pantalla.fill((0, 0, 0))
                         animar_mensaje(pantalla, fuente_texto,
-                                       "¡Nombre ingresado!", tamaño_pantalla)
+                                       "En un futuro distante, la humanidad se enfrentaba a una crisis sin precedentes en la Tierra.\nLa contaminación había alcanzado niveles críticos.\nLos recursos naturales se agotaban rápidamente y el clima era cada vez más hostil.\nLa esperanza parecía desvanecerse, pero los científicos descubrieron un antiguo pergamino que hablaba de un planeta misterioso y próspero llamado 'Gaia'.\nSegún las leyendas, Gaia era un paraíso oculto en las profundidades del universo, con una naturaleza exuberante y una fuente infinita de energía.\nInspirados por esta esperanza, la humanidad decidió embarcarse en una misión audaz y desesperada: abandonar la Tierra y buscar un nuevo hogar en Gaia.\nLa nave espacial 'Aurora' fue construida con tecnología de vanguardia y tripulada por los mejores científicos, ingenieros y exploradores.\nBajo el liderazgo del intrépido Capitán XX, la tripulación se embarcó en un viaje épico a través del vasto cosmos en busca de Gaia.\nA medida que la nave se adentraba en el espacio desconocido, se encontraron con peligros inimaginables: tormentas de asteroides, nebulosas traicioneras, etc.\nLa historia de la humanidad había dado un giro inesperado. A través de su valentía y determinación, habían encontrado un nuevo comienzo en Gaia, un planeta que les ofrecía una segunda oportunidad para preservar su legado y construir un futuro próspero...\n¡Así comienza tu aventura en la búsqueda de otro planeta!\n¡Buena suerte, Capitán Valerian!",
+                                       tamaño_pantalla, sonido_tecla_salir, sonido_tecla_aceptar)
                         pygame.quit()
                         quit()
             elif evento.type == pygame.KEYDOWN:
@@ -181,17 +221,14 @@ def main():
             texto_ingresado, True, (255, 255, 255))
         pantalla.blit(texto_ingresado_render,
                       (casilla_texto.x + 10, casilla_texto.y + 10))
-
         pygame.draw.rect(pantalla, (255, 255, 255), boton_aceptar)
         texto_aceptar_rect = texto_aceptar.get_rect()
         texto_aceptar_rect.center = boton_aceptar.center
         pantalla.blit(texto_aceptar, texto_aceptar_rect)
-
         pygame.draw.rect(pantalla, (255, 255, 255), boton_salir)
         texto_salir_rect = texto_salir.get_rect()
         texto_salir_rect.center = boton_salir.center
         pantalla.blit(texto_salir, texto_salir_rect)
-
         pygame.display.flip()
 
 
